@@ -14,43 +14,79 @@ model User {
     secondName String   @map("second_name") @db.VarChar(64)
     firstName  String   @map("first_name") @db.VarChar(64)
     middleName String   @map("middle_name") @db.VarChar(64)
-    createdAt  DateTime @default(now()) @map("created_at")
-    updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
     surveys    Survey[]
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
     @@map("users")
 }
 
 model Survey {
     id          String           @id() @default(dbgenerated("gen_random_uuid()")) @map("survey_id") @db.Uuid
+    shortId     String           @map("short_id") @db.Char(4)
     status      SurveyStatus
     user        User             @relation(fields: [userId], references: [id])
-    userId      String           @db.Uuid
+    userId      String           @map("user_id") @db.Uuid
     questions   SurveyQuestion[]
-    respondents Respondent[]
+    respondents Respondent[]     @relation(name: "survey_respondents")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
     @@map("surveys")
 }
 
 model Respondent {
-    id         String @id() @default(dbgenerated("gen_random_uuid()")) @map("respondent_id") @db.Uuid
-    telegramId Int    @unique @map("telegram_id")
-    secondName String @map("second_name") @db.VarChar(64)
-    firstName  String @map("first_name") @db.VarChar(64)
-    middleName String @map("middle_name") @db.VarChar(64)
-    survey     Survey @relation(fields: [surveyId], references: [id])
-    surveyId   String @db.Uuid
+    id         String             @id() @default(dbgenerated("gen_random_uuid()")) @map("respondent_id") @db.Uuid
+    telegramId Int                @unique @map("telegram_id")
+    secondName String             @map("second_name") @db.VarChar(64)
+    firstName  String             @map("first_name") @db.VarChar(64)
+    middleName String             @map("middle_name") @db.VarChar(64)
+    surveys    Survey[]           @relation(name: "survey_respondents")
+    answers    RespondentAnswer[]
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
     @@map("respondents")
 }
 
 model SurveyQuestion {
-    id       String          @id() @default(dbgenerated("gen_random_uuid()")) @map("question_id") @db.Uuid
-    survey   Survey          @relation(fields: [surveyId], references: [id])
-    surveyId String          @db.Uuid
-    status   QuestionsStatus
+    id          String                 @id() @default(dbgenerated("gen_random_uuid()")) @map("question_id") @db.Uuid
+    survey      Survey                 @relation(fields: [surveyId], references: [id])
+    surveyId    String                 @db.Uuid
+    title       String                 @map("title")
+    respondents RespondentAnswer[]
+    options     SurveyQuestionOption[]
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
     @@map("survey_questions")
+}
+
+model SurveyQuestionOption {
+    id         String         @id() @default(dbgenerated("gen_random_uuid()")) @map("option_id") @db.Uuid
+    question   SurveyQuestion @relation(fields: [questionId], references: [id])
+    questionId String         @db.Uuid
+    value      String         @map("value")
+
+    @@map("survey_questions_options")
+}
+
+model RespondentAnswer {
+    respondent   Respondent     @relation(fields: [respondentId], references: [id])
+    respondentId String         @map("respondent_id") @db.Uuid
+    question     SurveyQuestion @relation(fields: [questionId], references: [id])
+    questionId   String         @map("question_id") @db.Uuid
+    value        String         @map("value")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+    @@id([respondentId, questionId])
+    @@map("respondents_answers")
 }
 
 enum SurveyStatus {

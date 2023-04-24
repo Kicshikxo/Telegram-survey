@@ -2,6 +2,7 @@
     <div class="flex flex-column justify-content-center align-items-center w-screen h-screen gap-3">
         <InputText v-model="broadcastText" />
         <Button label="Отправить сообщение всем" @click="broadcast" />
+        <Button label="Начать" @click="start" />
     </div>
 </template>
 
@@ -24,5 +25,9 @@ async function broadcast() {
     const { error, pending: loading } = await useFetch('/api/telegram/broadcast', {
         query: { text: broadcastText.value }
     })
+}
+
+async function start() {
+    await useFetch('/api/telegram/survey/start', { query: { surveyId: '47aeeee9-68cb-4414-800f-dbd8189ec540' } })
 }
 </script>

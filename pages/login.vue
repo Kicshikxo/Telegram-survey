@@ -4,7 +4,13 @@
             <template #content>
                 <div class="p-fluid flex flex-column gap-3">
                     <InputText placeholder="Введите логин" v-model="username" />
-                    <InputPassword placeholder="Введите пароль" v-model="password" :feedback="false" @keyup.enter="tryLogin" />
+                    <InputPassword
+                        placeholder="Введите пароль"
+                        v-model="password"
+                        :feedback="false"
+                        @keyup.enter="tryLogin"
+                        toggleMask
+                    />
                 </div>
             </template>
             <template #footer>
