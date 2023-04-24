@@ -1,0 +1,66 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id         String   @id() @default(dbgenerated("gen_random_uuid()")) @map("user_id") @db.Uuid
+    username   String   @unique @map("username") @db.VarChar(64)
+    password   String   @map("password") @db.Char(60)
+    secondName String   @map("second_name") @db.VarChar(64)
+    firstName  String   @map("first_name") @db.VarChar(64)
+    middleName String   @map("middle_name") @db.VarChar(64)
+    createdAt  DateTime @default(now()) @map("created_at")
+    updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+    surveys    Survey[]
+
+    @@map("users")
+}
+
+model Survey {
+    id          String           @id() @default(dbgenerated("gen_random_uuid()")) @map("survey_id") @db.Uuid
+    status      SurveyStatus
+    user        User             @relation(fields: [userId], references: [id])
+    userId      String           @db.Uuid
+    questions   SurveyQuestion[]
+    respondents Respondent[]
+
+    @@map("surveys")
+}
+
+model Respondent {
+    id         String @id() @default(dbgenerated("gen_random_uuid()")) @map("respondent_id") @db.Uuid
+    telegramId Int    @unique @map("telegram_id")
+    secondName String @map("second_name") @db.VarChar(64)
+    firstName  String @map("first_name") @db.VarChar(64)
+    middleName String @map("middle_name") @db.VarChar(64)
+    survey     Survey @relation(fields: [surveyId], references: [id])
+    surveyId   String @db.Uuid
+
+    @@map("respondents")
+}
+
+model SurveyQuestion {
+    id       String          @id() @default(dbgenerated("gen_random_uuid()")) @map("question_id") @db.Uuid
+    survey   Survey          @relation(fields: [surveyId], references: [id])
+    surveyId String          @db.Uuid
+    status   QuestionsStatus
+
+    @@map("survey_questions")
+}
+
+enum SurveyStatus {
+    NOT_STARTED
+    IN_PROGRESS
+    FINISHED
+}
+
+enum QuestionsStatus {
+    QUEUED
+    IN_PROGRESS
+    FINISHED
+}
