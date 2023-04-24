@@ -1,5 +1,5 @@
 {
-    "name": "telegram-lesson",
+    "name": "telegram-survey",
     "private": true,
     "scripts": {
         "build": "nuxt build",
