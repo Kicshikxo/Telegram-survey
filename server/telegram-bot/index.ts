@@ -1,10 +1,20 @@
-import { SurveyStatus } from "@prisma/client";
-import { Telegraf, deunionize } from "telegraf";
+import { Respondent, Survey, SurveyStatus } from "@prisma/client";
+import { Context, Telegraf, deunionize } from "telegraf";
+import { CallbackQuery } from "telegraf/typings/core/types/typegram";
+
+export enum CallbackQueryDataType {
+    QuestionReply
+}
+
+export interface CallbackQueryData {
+    type: CallbackQueryDataType
+    optionId: string
+}
 
 const telegramBot = new Telegraf(process.env.TELEGRAM_BOT_API_KEY!)
 
 telegramBot.start(async (ctx) => {
-    await ctx.reply('Введите своё ФИО через команду /auth')
+    await ctx.reply('Введите своё ФИО после команды /auth')
 })
 telegramBot.command('auth', async (ctx) => {
     const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id } })
@@ -42,6 +52,46 @@ telegramBot.command('join', async (ctx) => {
         data: { surveys: { connect: { id: survey.id } } }
     })
     await ctx.reply(`Вы присоединились к комнате ${surveyShortId}`)
+})
+
+export async function sendSurveyQuestion(options: { ctx?: Context, survey: Survey, respondent: Respondent, index: number }) {
+    const question = await prisma.surveyQuestion.findFirst({ where: { surveyId: options.survey.id, index: { gte: options.index } }, include: { options: true }, orderBy: { index: 'asc' } })
+    if (!question) {
+        if (options.ctx) options.ctx.editMessageText('Спасибо за прохождение опроса!')
+        else telegramBot.telegram.sendMessage(options.respondent.telegramId, 'Спасибо за прохождение опроса!')
+
+        return
+    }
+
+    if (options.ctx) options.ctx.editMessageText(`Вопрос №${question.index}: ${question.title}`, {
+        reply_markup: {
+            inline_keyboard: question.options.map((option) => [{ text: option.value, callback_data: JSON.stringify({ type: CallbackQueryDataType.QuestionReply, optionId: option.id } as CallbackQueryData) }])
+        }
+    })
+    else telegramBot.telegram.sendMessage(options.respondent.telegramId, `Вопрос №${question.index}: ${question.title}`, {
+        reply_markup: {
+            inline_keyboard: question.options.map((option) => [{ text: option.value, callback_data: JSON.stringify({ type: CallbackQueryDataType.QuestionReply, optionId: option.id } as CallbackQueryData) }])
+        }
+    })
+}
+telegramBot.on('callback_query', async (ctx) => {
+    const { data: dataString } = ctx.callbackQuery as CallbackQuery.DataQuery
+    if (!dataString) return
+
+    const data = JSON.parse(dataString) as CallbackQueryData
+
+    if (data.type === CallbackQueryDataType.QuestionReply) {
+        const option = await prisma.surveyQuestionOption.findFirst({ where: { id: data.optionId, question: { survey: { status: SurveyStatus.IN_PROGRESS } } }, include: { question: { include: { survey: true } } } })
+        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from?.id } })
+
+        if (!option || !respondent) return
+
+        try {
+            await prisma.respondentAnswer.create({ data: { respondentId: respondent?.id, optionId: option.id } })
+        } catch (e) { console.error(e) }
+
+        sendSurveyQuestion({ ctx, survey: option.question.survey, respondent, index: option.question.index + 1 })
+    }
 })
 
 telegramBot.telegram.setMyCommands([

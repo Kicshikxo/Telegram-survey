@@ -1,33 +1,47 @@
 <template>
-    <div class="flex flex-column justify-content-center align-items-center w-screen h-screen gap-3">
-        <InputText v-model="broadcastText" />
-        <Button label="Отправить сообщение всем" @click="broadcast" />
-        <Button label="Начать" @click="start" />
-    </div>
+    <main>
+        <nav class="flex">
+            <TabMenu :model="tabs" />
+            <div class="flex justify-content-end align-items-center flex-auto border-bottom-2 surface-border">
+                <Button label="Выйти" icon="pi pi-sign-out" severity="danger" class="mr-1" text @click="confirmSignOut" />
+            </div>
+        </nav>
+        <nuxt-layout :name="false">
+            <nuxt-page />
+        </nuxt-layout>
+    </main>
 </template>
 
 <script setup lang="ts">
 import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import { useToast } from 'primevue/usetoast'
+import TabMenu from 'primevue/tabmenu'
+import { useConfirm } from 'primevue/useconfirm'
 
-const toast = useToast()
+const { signOut } = useAuth()
+const confirm = useConfirm()
 
-const broadcastText = ref<string>()
-
-async function broadcast() {
-    console.log(broadcastText.value)
-    if (!broadcastText.value) {
-        toast.add({ severity: 'error', summary: 'Введите текст', life: 3000 })
-        return
-    }
-
-    const { error, pending: loading } = await useFetch('/api/telegram/broadcast', {
-        query: { text: broadcastText.value }
+function confirmSignOut() {
+    confirm.require({
+        header: 'Подтверждение выхода',
+        message: 'Вы действительно хотите выйти?',
+        icon: 'pi pi-info-circle',
+        acceptClass: 'p-button-danger',
+        accept: () => {
+            signOut({ redirectTo: '/login' })
+        }
     })
 }
 
-async function start() {
-    await useFetch('/api/telegram/survey/start', { query: { surveyId: '47aeeee9-68cb-4414-800f-dbd8189ec540' } })
-}
+const tabs = ref([
+    {
+        label: 'Домашняя страница',
+        icon: 'pi pi-home',
+        to: '/'
+    },
+    {
+        label: 'Опросы',
+        icon: 'pi pi-th-large',
+        to: '/survey'
+    }
+])
 </script>
