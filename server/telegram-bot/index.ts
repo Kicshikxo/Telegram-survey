@@ -39,19 +39,19 @@ telegramBot.command('join', async (ctx) => {
 
     const { text } = deunionize(ctx.message)
     const surveyShortId = text?.match(/[A-Z0-9]{4}/)?.at(0)
-    if (!surveyShortId) return await ctx.reply('Неверный формат кода комнаты')
+    if (!surveyShortId) return await ctx.reply('Неверный формат идентификатора опроса')
 
     if (await prisma.respondent.findFirst({ where: { telegramId: ctx.from.id, surveys: { some: { shortId: surveyShortId, status: SurveyStatus.NOT_STARTED } } } }))
-        return await ctx.reply(`Вы уже вошли в комнату ${surveyShortId}`)
+        return await ctx.reply(`Вы уже присоединились к опросу ${surveyShortId}`)
 
     const survey = await prisma.survey.findFirst({ where: { shortId: surveyShortId, status: SurveyStatus.NOT_STARTED } })
-    if (!survey) return await ctx.reply(`Комната ${surveyShortId} не существует`)
+    if (!survey) return await ctx.reply(`Опрос ${surveyShortId} не существует`)
 
     await prisma.respondent.update({
         where: { telegramId: ctx.from.id },
         data: { surveys: { connect: { id: survey.id } } }
     })
-    await ctx.reply(`Вы присоединились к комнате ${surveyShortId}`)
+    await ctx.reply(`Вы присоединились к опросу ${surveyShortId}`)
 })
 
 export async function sendSurveyQuestion(options: { ctx?: Context, survey: Survey, respondent: Respondent, index: number }) {
@@ -101,7 +101,7 @@ telegramBot.telegram.setMyCommands([
     },
     {
         command: '/join',
-        description: 'Подключение к комнате'
+        description: 'Подключение к опросу'
     }
 ])
 
