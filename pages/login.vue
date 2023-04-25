@@ -1,16 +1,27 @@
 <template>
     <div class="flex justify-content-center align-items-center h-screen w-screen surface-ground">
         <Card class="surface-card border-1 surface-border border-round shadow-2 w-full sm:w-24rem">
+            <template #title> Войдите в систему </template>
             <template #content>
-                <div class="p-fluid flex flex-column gap-3">
-                    <InputText placeholder="Введите логин" v-model="username" />
-                    <InputPassword
-                        placeholder="Введите пароль"
-                        v-model="password"
-                        :feedback="false"
-                        @keyup.enter="tryLogin"
-                        toggleMask
-                    />
+                <div class="p-fluid flex flex-column gap-4">
+                    <div class="p-inputgroup w-full">
+                        <span class="p-inputgroup-addon">
+                            <i class="pi pi-user" />
+                        </span>
+                        <InputText placeholder="Введите логин" v-model="username" />
+                    </div>
+                    <div class="p-inputgroup w-full">
+                        <span class="p-inputgroup-addon">
+                            <i class="pi pi-lock" />
+                        </span>
+                        <InputPassword
+                            placeholder="Введите пароль"
+                            v-model="password"
+                            :feedback="false"
+                            @keyup.enter="tryLogin"
+                            toggleMask
+                        />
+                    </div>
                 </div>
             </template>
             <template #footer>
@@ -30,7 +41,8 @@ import InputPassword from 'primevue/password'
 import { useToast } from 'primevue/usetoast'
 
 definePageMeta({
-    auth: false
+    auth: false,
+    layout: false
 })
 
 const route = useRoute()
