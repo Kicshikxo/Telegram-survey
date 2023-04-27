@@ -22,7 +22,7 @@
     "devDependencies": {
         "@nuxt/devtools": "^0.4.2",
         "@types/bcrypt": "^5.0.0",
-        "@types/jsonwebtoken": "^9.0.1",
+        "@types/jsonwebtoken": "^9.0.2",
         "@types/node": "^18",
         "nuxt": "^3.4.2",
         "prisma": "^4.13.0"
