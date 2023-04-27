@@ -14,6 +14,24 @@
                     :options="chartOptions"
                     class="w-full h-30rem"
                 />
+                <DataTable
+                    :value="
+                        question.options
+                            .map((option) => option.answers.map((answer) => ({ answer, option })))
+                            .flat()
+                            .sort((a, b) => a.answer.createdAt.localeCompare(b.answer.createdAt))
+                            .reverse()
+                    "
+                    class="p-datatable-lg"
+                >
+                    <Column field="answer.respondent.secondName" header="Фамилия" />
+                    <Column field="answer.respondent.firstName" header="Имя" />
+                    <Column field="answer.respondent.middleName" header="Отчество" />
+                    <Column field="option.value" header="Ответ" />
+                    <Column field="answer.createdAt" header="Время ответа">
+                        <template #body="{ data }">{{ new Date(data.answer.createdAt).toLocaleString() }}</template>
+                    </Column>
+                </DataTable>
             </TabPanel>
         </TabView>
     </div>
@@ -22,6 +40,8 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
 import Chart from 'primevue/chart/Chart.vue'
+import Column from 'primevue/column/Column.vue'
+import DataTable from 'primevue/datatable/DataTable.vue'
 import TabPanel from 'primevue/tabpanel/TabPanel.vue'
 import TabView from 'primevue/tabview/TabView.vue'
 

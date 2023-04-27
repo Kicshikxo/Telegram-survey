@@ -6,5 +6,5 @@ export default defineEventHandler(async event => {
 
     if (!query.surveyId) return sendError(event, createError({ statusCode: 400, statusMessage: 'surveyId is not provided' }))
 
-    return await prisma.survey.findUnique({ where: { id: query.surveyId }, include: { respondents: true, questions: { include: { options: { include: { answers: true } } }, orderBy: { index: 'asc' } } } })
+    return await prisma.survey.findUnique({ where: { id: query.surveyId }, include: { respondents: true, questions: { include: { options: { include: { answers: { include: { respondent: true } } } } }, orderBy: { index: 'asc' } } } })
 })
