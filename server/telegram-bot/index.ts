@@ -53,6 +53,11 @@ telegramBot.command('join', async (ctx) => {
     })
     await ctx.reply(`Вы присоединились к опросу ${surveyShortId}`)
 })
+telegramBot.command('reflection', async (ctx) => {
+    const { text } = deunionize(ctx.message)
+
+    ctx.reply(text.split(' ').slice(1).join(' '))
+})
 
 export async function sendSurveyQuestion(options: { ctx?: Context, survey: Survey, respondent: Respondent, index: number }) {
     const question = await prisma.surveyQuestion.findFirst({ where: { surveyId: options.survey.id, index: { gte: options.index } }, include: { options: true }, orderBy: { index: 'asc' } })
@@ -102,7 +107,11 @@ telegramBot.telegram.setMyCommands([
     {
         command: '/join',
         description: 'Подключение к опросу'
-    }
+    },
+    {
+        command: '/reflection',
+        description: 'Генерация изображения'
+    },
 ])
 
 export default telegramBot
