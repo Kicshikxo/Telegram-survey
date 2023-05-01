@@ -11,7 +11,7 @@
     "dependencies": {
         "@prisma/client": "^4.13.0",
         "bcrypt": "^5.1.0",
-        "chart.js": "^4.2.1",
+        "chart.js": "^4.3.0",
         "crc": "^4.3.2",
         "jsonwebtoken": "^9.0.0",
         "primeflex": "^3.3.0",
@@ -20,11 +20,11 @@
         "telegraf": "^4.12.2"
     },
     "devDependencies": {
-        "@nuxt/devtools": "^0.4.2",
+        "@nuxt/devtools": "^0.4.5",
         "@types/bcrypt": "^5.0.0",
         "@types/jsonwebtoken": "^9.0.2",
         "@types/node": "^18",
-        "nuxt": "^3.4.2",
+        "nuxt": "^3.4.3",
         "prisma": "^4.13.0"
     }
 }
