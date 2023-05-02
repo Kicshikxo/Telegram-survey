@@ -15,8 +15,10 @@
                                 {{ data.title }}
                                 <div class="flex justify-content-end flex-wrap gap-2">
                                     <Button
-                                        label="Редактировать"
-                                        icon="pi pi-pencil"
+                                        label="Подробнее"
+                                        icon="pi pi-ellipsis-v"
+                                        iconPos="right"
+                                        severity="secondary"
                                         text
                                         size="small"
                                         @click="router.push(`/survey/${data.id}`)"
@@ -58,7 +60,7 @@
                                     icon="pi pi-question"
                                     class="w-full justify-content-start"
                                 >
-                                    <span>{{ question.title }}</span>
+                                    <span>{{ (question as SurveyQuestion).title }}</span>
                                 </InlineMessage>
                             </div>
                         </template>
@@ -95,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { SurveyStatus } from '@prisma/client'
+import { SurveyQuestion, SurveyStatus } from '@prisma/client'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import DataView from 'primevue/dataview'
