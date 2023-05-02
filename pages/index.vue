@@ -42,6 +42,11 @@ const tabs = ref([
         label: 'Опросы',
         icon: 'pi pi-th-large',
         to: '/survey'
+    },
+    {
+        label: 'Опрашиваемые',
+        icon: 'pi pi-users',
+        to: '/respondents'
     }
 ])
 </script>
