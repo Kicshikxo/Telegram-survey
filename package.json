@@ -16,7 +16,7 @@
         "jsonwebtoken": "^9.0.0",
         "primeflex": "^3.3.0",
         "primeicons": "^6.0.1",
-        "primevue": "^3.27.0",
+        "primevue": "^3.28.0",
         "telegraf": "^4.12.2"
     },
     "devDependencies": {
