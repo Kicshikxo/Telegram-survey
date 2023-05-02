@@ -19,6 +19,11 @@ const tabs = ref([
         to: `/survey/${route.params.surveyId}`
     },
     {
+        label: 'Изображения',
+        icon: 'pi pi-image',
+        to: `/survey/${route.params.surveyId}/images`
+    },
+    {
         label: 'Участники',
         icon: 'pi pi-users',
         to: `/survey/${route.params.surveyId}/respondents`
