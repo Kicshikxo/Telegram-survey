@@ -14,6 +14,7 @@ model User {
     secondName String   @map("second_name") @db.VarChar(64)
     firstName  String   @map("first_name") @db.VarChar(64)
     middleName String   @map("middle_name") @db.VarChar(64)
+    configs    Config[]
     surveys    Survey[]
 
     createdAt DateTime @default(now()) @map("created_at")
@@ -22,15 +23,29 @@ model User {
     @@map("users")
 }
 
+model Config {
+    user   User       @relation(fields: [userId], references: [id])
+    userId String     @map("user_id") @db.Uuid
+    type   ConfigType @map("type")
+    value  String     @map("value")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+    @@unique([userId, type])
+    @@map("users_configs")
+}
+
 model Survey {
-    id          String           @id() @default(dbgenerated("gen_random_uuid()")) @map("survey_id") @db.Uuid
-    shortId     String           @map("short_id") @db.Char(4)
-    title       String           @map("title")
-    status      SurveyStatus     @default(NOT_STARTED)
-    user        User             @relation(fields: [userId], references: [id])
-    userId      String           @map("user_id") @db.Uuid
+    id          String                 @id() @default(dbgenerated("gen_random_uuid()")) @map("survey_id") @db.Uuid
+    shortId     String                 @map("short_id") @db.Char(4)
+    title       String                 @map("title")
+    status      SurveyStatus           @default(NOT_STARTED)
+    user        User                   @relation(fields: [userId], references: [id])
+    userId      String                 @map("user_id") @db.Uuid
     questions   SurveyQuestion[]
-    respondents Respondent[]     @relation(name: "survey_respondents")
+    respondents Respondent[]           @relation(name: "survey_respondents")
+    images      GeneratedSurveyImage[]
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
@@ -39,13 +54,14 @@ model Survey {
 }
 
 model Respondent {
-    id         String             @id() @default(dbgenerated("gen_random_uuid()")) @map("respondent_id") @db.Uuid
-    telegramId Int                @unique @map("telegram_id")
-    secondName String             @map("second_name")
-    firstName  String             @map("first_name")
-    middleName String             @map("middle_name")
-    surveys    Survey[]           @relation(name: "survey_respondents")
+    id         String                 @id() @default(dbgenerated("gen_random_uuid()")) @map("respondent_id") @db.Uuid
+    telegramId Int                    @unique @map("telegram_id")
+    secondName String                 @map("second_name")
+    firstName  String                 @map("first_name")
+    middleName String                 @map("middle_name")
+    surveys    Survey[]               @relation(name: "survey_respondents")
     answers    RespondentAnswer[]
+    images     GeneratedSurveyImage[]
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
@@ -89,6 +105,26 @@ model RespondentAnswer {
 
     @@id([respondentId, optionId])
     @@map("respondents_answers")
+}
+
+model GeneratedSurveyImage {
+    id           String     @id() @default(dbgenerated("gen_random_uuid()")) @map("image_id") @db.Uuid
+    survey       Survey     @relation(fields: [surveyId], references: [id])
+    surveyId     String     @map("survey_id") @db.Uuid
+    respondent   Respondent @relation(fields: [respondentId], references: [id])
+    respondentId String     @map("respondent_id") @db.Uuid
+    prompt       String     @map("prompt")
+    url          String     @map("url")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+    @@map("generated_survey_images")
+}
+
+enum ConfigType {
+    STABLE_DIFFUSION_API_KEY
+    YANDEX_TRANSLATOR_API_KEY
 }
 
 enum SurveyStatus {
