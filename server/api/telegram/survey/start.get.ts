@@ -6,6 +6,7 @@ export default defineEventHandler(async event => {
     if (!tokenData) return
 
     const query = getQuery(event) as { surveyId: string }
+    if (!query.surveyId) return sendError(event, createError({ statusCode: 400, statusMessage: 'surveyId is not provided' }))
 
     const survey = await prisma.survey.findUnique({ where: { id: query.surveyId }, include: { respondents: true } })
     if (!survey) return
