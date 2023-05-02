@@ -1,4 +1,8 @@
 export default defineNuxtConfig({
+    app: {
+        pageTransition: { name: 'page', mode: 'out-in' }
+    },
+
     css: [
         'primevue/resources/themes/lara-light-blue/theme.css',
         'primevue/resources/primevue.css',
