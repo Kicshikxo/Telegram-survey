@@ -37,6 +37,9 @@ telegramBot.command('join', async (ctx) => {
     const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id } })
     if (!respondent) return await ctx.reply('Вы не авторизованы')
 
+    const currentSurvey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id } }, status: { not: SurveyStatus.FINISHED } } })
+    if (currentSurvey) return ctx.reply(`Вы уже участвуете в опросе ${currentSurvey.shortId}, дождитесь его завершения`)
+
     const { text } = deunionize(ctx.message)
     const surveyShortId = text?.match(/[A-Z0-9]{4}/)?.at(0)
     if (!surveyShortId) return await ctx.reply('Неверный формат идентификатора опроса')
@@ -54,13 +57,30 @@ telegramBot.command('join', async (ctx) => {
     await ctx.reply(`Вы присоединились к опросу ${surveyShortId}`)
 })
 telegramBot.command('reflection', async (ctx) => {
-    const { text } = deunionize(ctx.message)
+    const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id } })
+    if (!respondent) return await ctx.reply('Вы не авторизованы')
 
-    ctx.reply(text.split(' ').slice(1).join(' '))
+    const survey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id } }, status: SurveyStatus.IN_PROGRESS } })
+    if (!survey) return ctx.reply('Опрос не найден')
+
+    const text = deunionize(ctx.message).text.split(' ').slice(1).join(' ')
+    if (!text.trim()) return ctx.reply('Введите текст для генерации из него картинки')
+
+    const message = await ctx.reply('Ожидайте...')
+
+    const response = await $fetch('/api/telegram/survey/stable-diffusion', { query: { surveyId: survey.id, prompt: text } })
+    if (response.status !== 'success' || !response.output.length) return ctx.reply('Произошла неизвестная ошибка')
+
+    await prisma.generatedSurveyImage.createMany({ data: response.output.map(url => ({ surveyId: survey.id, respondentId: respondent.id, url, prompt: text })) })
+
+    if (!response.output.length) return await ctx.editMessageText('Произошла неизвестная ошибка')
+
+    await ctx.replyWithMediaGroup(response.output.map(url => ({ type: 'photo', media: { url } })))
+    await ctx.deleteMessage(message.message_id)
 })
 
 export async function sendSurveyQuestion(options: { ctx?: Context, survey: Survey, respondent: Respondent, index: number }) {
-    const question = await prisma.surveyQuestion.findFirst({ where: { surveyId: options.survey.id, index: { gte: options.index } }, include: { options: true }, orderBy: { index: 'asc' } })
+    const question = await prisma.surveyQuestion.findFirst({ where: { surveyId: options.survey.id, index: { gte: options.index } }, include: { survey: { include: { _count: { select: { questions: true } } } }, options: true }, orderBy: { index: 'asc' } })
     if (!question) {
         if (options.ctx) options.ctx.editMessageText('Спасибо за прохождение опроса!')
         else telegramBot.telegram.sendMessage(options.respondent.telegramId, 'Спасибо за прохождение опроса!')
@@ -68,7 +88,7 @@ export async function sendSurveyQuestion(options: { ctx?: Context, survey: Surve
         return
     }
 
-    if (options.ctx) options.ctx.editMessageText(`Вопрос №${question.index}: ${question.title}`, {
+    if (options.ctx) options.ctx.editMessageText(`Вопрос №${question.index}/${question.survey._count.questions}: ${question.title}`, {
         reply_markup: {
             inline_keyboard: question.options.map((option) => [{ text: option.value, callback_data: JSON.stringify({ type: CallbackQueryDataType.QuestionReply, optionId: option.id } as CallbackQueryData) }])
         }
