@@ -58,20 +58,22 @@
                         </template>
                         <template #content>
                             <div class="flex flex-column gap-2">
-                                <InlineMessage
-                                    v-if="data.shortId"
-                                    severity="warn"
-                                    icon="pi pi-info-circle"
-                                    class="w-full justify-content-start"
-                                >
-                                    <span>Короткий идентификатор: </span>
-                                    <span class="font-bold">{{ data.shortId }}</span>
-                                </InlineMessage>
-                                <InlineMessage severity="info" icon="pi pi-users" class="w-full justify-content-start">
-                                    <span>Количество участников: </span>
-                                    <span class="font-bold">{{ data.respondents.length }}</span>
-                                </InlineMessage>
-                                <Divider class="my-0" />
+                                <div v-if="data.status !== SurveyStatus.IN_DEVELOPMENT" class="flex flex-column gap-2">
+                                    <InlineMessage
+                                        v-if="data.shortId"
+                                        severity="warn"
+                                        icon="pi pi-info-circle"
+                                        class="w-full justify-content-start"
+                                    >
+                                        <span>Короткий идентификатор: </span>
+                                        <span class="font-bold">{{ data.shortId }}</span>
+                                    </InlineMessage>
+                                    <InlineMessage severity="info" icon="pi pi-users" class="w-full justify-content-start">
+                                        <span>Количество участников: </span>
+                                        <span class="font-bold">{{ data.respondents.length }}</span>
+                                    </InlineMessage>
+                                    <Divider class="my-0" />
+                                </div>
                                 <InlineMessage
                                     v-for="question in data.questions"
                                     severity="info"
