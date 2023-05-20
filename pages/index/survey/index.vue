@@ -18,7 +18,7 @@
                     <Card class="border-1 surface-border shadow-none">
                         <template #title>
                             <div class="flex justify-content-between align-items-center">
-                                <span :class="{ 'text-red-400': !data.title }">
+                                <span :class="{ 'text-primary': !data.title }">
                                     {{ data.title || 'Без названия' }}
                                 </span>
                                 <div class="flex justify-content-end flex-wrap gap-2">
@@ -97,6 +97,13 @@
                                     icon="pi pi-thumbs-up"
                                     severity="success"
                                     @click="() => confirmPublishSurvey(data.id)"
+                                />
+                                <Button
+                                    v-if="data.status === SurveyStatus.NOT_STARTED"
+                                    label="Отозвать"
+                                    icon="pi pi-thumbs-down"
+                                    severity="danger"
+                                    @click="() => confirmResetSurvey(data.id)"
                                 />
                                 <Button
                                     v-if="data.status === SurveyStatus.NOT_STARTED"
