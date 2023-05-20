@@ -12,6 +12,14 @@
                     />
                     <div class="flex gap-2">
                         <Button
+                            v-if="survey?.status !== SurveyStatus.IN_PROGRESS"
+                            label="Удалить"
+                            icon="pi pi-trash"
+                            severity="danger"
+                            :disabled="loadingSurvey"
+                            @click="confirmDeleteSurvey"
+                        />
+                        <Button
                             v-if="!editMode"
                             label="Обновить"
                             icon="pi pi-refresh"
@@ -132,6 +140,7 @@ import { useToast } from 'primevue/usetoast'
 import { DragHandle, SlickItem, SlickList } from 'vue-slicksort'
 
 const route = useRoute()
+const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
 
@@ -146,6 +155,40 @@ async function cancelChanges() {
     editMode.value = false
 
     await refreshSurvey()
+}
+
+async function confirmDeleteSurvey() {
+    confirm.require({
+        header: 'Подтверждение действия',
+        message: 'Вы действительно хотите удалить опрос?',
+        icon: 'pi pi-question-circle',
+        accept: () => {
+            deleteSurvey()
+        }
+    })
+}
+
+async function deleteSurvey() {
+    if (!survey.value) return
+
+    const { error } = await useFetch('/api/telegram/survey/delete', { query: { surveyId: survey.value.id } })
+
+    if (error.value)
+        toast.add({
+            severity: 'error',
+            summary: 'Ошибка удаления',
+            detail: 'Опрос не был удалён',
+            life: 3000
+        })
+    else
+        toast.add({
+            severity: 'success',
+            summary: 'Успешное удаление',
+            detail: 'Опрос был удалён',
+            life: 3000
+        })
+
+    router.back()
 }
 
 async function createQuestion() {

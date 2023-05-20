@@ -4,7 +4,8 @@ export const localizedSurveyStatus: { [key in SurveyStatus]: string } = {
     IN_DEVELOPMENT: 'В разработке',
     NOT_STARTED: 'Не начато',
     IN_PROGRESS: 'В процессе',
-    FINISHED: 'Завершено'
+    FINISHED: 'Завершено',
+    DELETED: 'Удалён',
 }
 
 export const localizeSurveyStatus = (status: SurveyStatus) => localizedSurveyStatus[status]

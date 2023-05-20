@@ -44,7 +44,7 @@ telegramBot.command('join', async (ctx) => {
         const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id.toString() } })
         if (!respondent) return await ctx.reply('Вы не авторизованы')
 
-        const currentSurvey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id.toString() } }, status: { not: SurveyStatus.FINISHED } } })
+        const currentSurvey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id.toString() } }, status: { notIn: [SurveyStatus.FINISHED, SurveyStatus.DELETED] } } })
         if (currentSurvey) return ctx.reply(`Вы уже участвуете в опросе ${currentSurvey.shortId}, дождитесь его завершения`)
 
         const { text } = deunionize(ctx.message)

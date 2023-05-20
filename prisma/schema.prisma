@@ -24,7 +24,7 @@ model User {
 }
 
 model Config {
-    user   User       @relation(fields: [userId], references: [id])
+    user   User       @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     userId String     @map("user_id") @db.Uuid
     type   ConfigType @map("type")
     value  String     @map("value")
@@ -41,7 +41,7 @@ model Survey {
     shortId     String?                @map("short_id") @db.Char(4)
     title       String                 @map("title")
     status      SurveyStatus           @default(IN_DEVELOPMENT)
-    user        User                   @relation(fields: [userId], references: [id])
+    user        User                   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     userId      String                 @map("user_id") @db.Uuid
     questions   SurveyQuestion[]
     respondents Respondent[]           @relation(name: "survey_respondents")
@@ -71,7 +71,7 @@ model Respondent {
 
 model SurveyQuestion {
     id       String                 @id() @default(dbgenerated("gen_random_uuid()")) @map("question_id") @db.Uuid
-    survey   Survey                 @relation(fields: [surveyId], references: [id])
+    survey   Survey                 @relation(fields: [surveyId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     surveyId String                 @map("survey_id") @db.Uuid
     title    String                 @map("title")
     index    Int                    @map("index")
@@ -85,7 +85,7 @@ model SurveyQuestion {
 
 model SurveyQuestionOption {
     id         String             @id() @default(dbgenerated("gen_random_uuid()")) @map("option_id") @db.Uuid
-    question   SurveyQuestion     @relation(fields: [questionId], references: [id])
+    question   SurveyQuestion     @relation(fields: [questionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     questionId String             @map("question_id") @db.Uuid
     value      String             @map("value")
     answers    RespondentAnswer[]
@@ -94,9 +94,9 @@ model SurveyQuestionOption {
 }
 
 model RespondentAnswer {
-    respondent   Respondent           @relation(fields: [respondentId], references: [id])
+    respondent   Respondent           @relation(fields: [respondentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     respondentId String               @map("respondent_id") @db.Uuid
-    option       SurveyQuestionOption @relation(fields: [optionId], references: [id])
+    option       SurveyQuestionOption @relation(fields: [optionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     optionId     String               @map("option_id") @db.Uuid
 
     createdAt DateTime @default(now()) @map("created_at")
@@ -108,9 +108,9 @@ model RespondentAnswer {
 
 model GeneratedSurveyImage {
     id               String     @id() @default(dbgenerated("gen_random_uuid()")) @map("image_id") @db.Uuid
-    survey           Survey     @relation(fields: [surveyId], references: [id])
+    survey           Survey     @relation(fields: [surveyId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     surveyId         String     @map("survey_id") @db.Uuid
-    respondent       Respondent @relation(fields: [respondentId], references: [id])
+    respondent       Respondent @relation(fields: [respondentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     respondentId     String     @map("respondent_id") @db.Uuid
     prompt           String     @map("prompt")
     translatedPrompt String?    @map("translated_prompt")
@@ -132,6 +132,7 @@ enum SurveyStatus {
     NOT_STARTED
     IN_PROGRESS
     FINISHED
+    DELETED
 }
 
 enum QuestionsStatus {
