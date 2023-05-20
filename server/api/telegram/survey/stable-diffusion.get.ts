@@ -32,7 +32,6 @@ export default defineEventHandler(async event => {
     const query = getQuery(event) as { surveyId: string, prompt: string }
     if (!query.surveyId || !query.prompt) return sendError(event, createError({ statusCode: 400, statusMessage: 'surveyId or prompt is not provided' }))
 
-
     const survey = await prisma.survey.findUnique({ where: { id: query.surveyId }, include: { user: { include: { configs: true } } } })
     if (!survey) return
 
@@ -42,14 +41,14 @@ export default defineEventHandler(async event => {
     const yandexTranslatorApiKey = survey.user.configs.find(config => config.type === ConfigType.YANDEX_TRANSLATOR_API_KEY)?.value
     if (!stableDiffusionApiKey) return
 
-    const translatedPrompt = await $fetch<{ translations: { text: string, detectedLanguageCode: string }[] }>('https://translate.api.cloud.yandex.net/translate/v2/translate', {
+    const { translations: [{ text: translatedPrompt }] } = (await $fetch<{ translations: { text: string, detectedLanguageCode: string }[] }>('https://translate.api.cloud.yandex.net/translate/v2/translate', {
         method: 'POST',
         headers: { "Authorization": `Api-Key ${yandexTranslatorApiKey}` },
         body: {
             targetLanguageCode: 'en',
             texts: [query.prompt]
         }
-    })
+    }))
 
     console.log(translatedPrompt)
 
@@ -57,7 +56,7 @@ export default defineEventHandler(async event => {
         method: 'POST',
         body: {
             key: stableDiffusionApiKey,
-            prompt: translatedPrompt.translations.at(0)?.text,
+            prompt: translatedPrompt,
             width: '512',
             height: '512',
             samples: '1'
@@ -77,5 +76,5 @@ export default defineEventHandler(async event => {
         }
     }
 
-    return response
+    return { ...response, translatedPrompt }
 })
