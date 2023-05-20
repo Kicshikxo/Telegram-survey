@@ -1,6 +1,8 @@
 <template>
     <main>
-        <TabMenu :model="tabs" />
+        <nav class="sticky surface-card" style="z-index: 1; top: 58px">
+            <TabMenu :model="tabs" />
+        </nav>
         <nuxt-layout :name="false">
             <nuxt-page />
         </nuxt-layout>
@@ -14,7 +16,7 @@ const route = useRoute()
 
 const tabs = ref([
     {
-        label: 'Опрос',
+        label: 'Вопросы',
         icon: 'pi pi-question',
         to: `/survey/${route.params.surveyId}`
     },

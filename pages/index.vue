@@ -1,6 +1,6 @@
 <template>
     <main>
-        <nav class="flex">
+        <nav class="flex sticky top-0 surface-card" style="z-index: 2">
             <TabMenu :model="tabs" />
             <div class="flex justify-content-end align-items-center flex-auto border-bottom-2 surface-border">
                 <Button label="Выйти" icon="pi pi-sign-out" severity="danger" class="mr-1" text @click="confirmSignOut" />
