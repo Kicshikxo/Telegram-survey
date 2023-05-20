@@ -12,6 +12,10 @@ body {
     border: none;
 }
 
+.p-card .p-card-content {
+    padding: 0;
+}
+
 .page-enter-active,
 .page-leave-active {
     transition: all 0.15s;
