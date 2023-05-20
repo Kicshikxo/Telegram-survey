@@ -75,3 +75,9 @@ async function tryLogin() {
     loading.value = false
 }
 </script>
+
+<style>
+.p-password-input {
+    width: 100% !important;
+}
+</style>
