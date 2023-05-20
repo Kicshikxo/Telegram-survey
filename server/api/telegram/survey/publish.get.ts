@@ -10,7 +10,7 @@ export default defineEventHandler(async event => {
     const survey = await prisma.survey.findUnique({ where: { id: query.surveyId } })
     if (!survey) return
 
-    await prisma.survey.update({ where: { id: survey.id }, data: { status: SurveyStatus.NOT_STARTED } })
+    await prisma.survey.update({ where: { id: survey.id }, data: { shortId: (~~(Math.random() * 10000)).toString().padStart(4, '0'), status: SurveyStatus.NOT_STARTED } })
 
     return { success: true }
 })
