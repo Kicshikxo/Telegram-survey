@@ -18,7 +18,7 @@ telegramBot.start(async (ctx) => {
 })
 telegramBot.command('auth', async (ctx) => {
     try {
-        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id } })
+        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id.toString() } })
         if (respondent) return await ctx.reply('Вы уже авторизованы')
 
         const { text } = deunionize(ctx.message)
@@ -29,7 +29,7 @@ telegramBot.command('auth', async (ctx) => {
         await prisma.respondent.create({
             data: {
                 secondName, firstName, middleName,
-                telegramId: ctx.from.id
+                telegramId: ctx.from.id.toString()
             }
         })
         await ctx.reply(`Вы успешно авторизованы`)
@@ -41,24 +41,24 @@ telegramBot.command('auth', async (ctx) => {
 })
 telegramBot.command('join', async (ctx) => {
     try {
-        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id } })
+        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id.toString() } })
         if (!respondent) return await ctx.reply('Вы не авторизованы')
 
-        const currentSurvey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id } }, status: { not: SurveyStatus.FINISHED } } })
+        const currentSurvey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id.toString() } }, status: { not: SurveyStatus.FINISHED } } })
         if (currentSurvey) return ctx.reply(`Вы уже участвуете в опросе ${currentSurvey.shortId}, дождитесь его завершения`)
 
         const { text } = deunionize(ctx.message)
         const surveyShortId = text?.match(/[A-Z0-9]{4}/)?.at(0)
         if (!surveyShortId) return await ctx.reply('Неверный формат идентификатора опроса')
 
-        if (await prisma.respondent.findFirst({ where: { telegramId: ctx.from.id, surveys: { some: { shortId: surveyShortId, status: SurveyStatus.NOT_STARTED } } } }))
+        if (await prisma.respondent.findFirst({ where: { telegramId: ctx.from.id.toString(), surveys: { some: { shortId: surveyShortId, status: SurveyStatus.NOT_STARTED } } } }))
             return await ctx.reply(`Вы уже присоединились к опросу ${surveyShortId}`)
 
         const survey = await prisma.survey.findFirst({ where: { shortId: surveyShortId, status: SurveyStatus.NOT_STARTED } })
         if (!survey) return await ctx.reply(`Опрос ${surveyShortId} не существует`)
 
         await prisma.respondent.update({
-            where: { telegramId: ctx.from.id },
+            where: { telegramId: ctx.from.id.toString() },
             data: { surveys: { connect: { id: survey.id } } }
         })
         await ctx.reply(`Вы присоединились к опросу ${surveyShortId}`)
@@ -70,10 +70,10 @@ telegramBot.command('join', async (ctx) => {
 })
 telegramBot.command('reflection', async (ctx) => {
     try {
-        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id } })
+        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from.id.toString() } })
         if (!respondent) return await ctx.reply('Вы не авторизованы')
 
-        const survey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id } }, status: SurveyStatus.IN_PROGRESS } })
+        const survey = await prisma.survey.findFirst({ where: { respondents: { some: { telegramId: ctx.from.id.toString() } }, status: { in: [SurveyStatus.NOT_STARTED, SurveyStatus.IN_PROGRESS] } } })
         if (!survey) return ctx.reply('Опрос не найден')
 
         const text = deunionize(ctx.message).text.split(' ').slice(1).join(' ')
@@ -84,9 +84,8 @@ telegramBot.command('reflection', async (ctx) => {
         const response = await $fetch('/api/telegram/survey/stable-diffusion', { query: { surveyId: survey.id, prompt: text } })
         if (response.status !== 'success' || !response.output.length) return ctx.reply('Произошла неизвестная ошибка')
 
-        await prisma.generatedSurveyImage.createMany({ data: response.output.map(url => ({ surveyId: survey.id, respondentId: respondent.id, url, prompt: text })) })
-
-        if (!response.output.length) return await ctx.editMessageText('Произошла неизвестная ошибка')
+        await prisma.generatedSurveyImage.createMany({ data: response.output.map(url => ({ surveyId: survey.id, respondentId: respondent.id, url, prompt: text, translatedPrompt: response.translatedPrompt })) })
+        if (!response.output.length) return await ctx.editMessageText('Ошибка генерации изображения')
 
         await ctx.replyWithMediaGroup(response.output.map(url => ({ type: 'photo', media: { url } })))
         await ctx.deleteMessage(message.message_id)
@@ -125,7 +124,7 @@ telegramBot.on('callback_query', async (ctx) => {
 
     if (data.type === CallbackQueryDataType.QuestionReply) {
         const option = await prisma.surveyQuestionOption.findFirst({ where: { id: data.optionId, question: { survey: { status: SurveyStatus.IN_PROGRESS } } }, include: { question: { include: { survey: true } } } })
-        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from?.id } })
+        const respondent = await prisma.respondent.findUnique({ where: { telegramId: ctx.from?.id.toString() } })
 
         if (!option || !respondent) return
 
