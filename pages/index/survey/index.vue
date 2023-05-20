@@ -4,7 +4,13 @@
             <template #header>
                 <div class="flex justify-content-end gap-2">
                     <Button label="Обновить" icon="pi pi-refresh" :loading="loadingSurveys" @click="() => refreshSurveys()" />
-                    <Button label="Добавить" icon="pi pi-plus" severity="success" :disabled="loadingSurveys" @click="" />
+                    <Button
+                        label="Добавить"
+                        icon="pi pi-plus"
+                        severity="success"
+                        :disabled="loadingSurveys"
+                        @click="confirmCreateSurvey"
+                    />
                 </div>
             </template>
             <template #grid="{ data }">
@@ -12,7 +18,7 @@
                     <Card class="border-1 surface-border shadow-none">
                         <template #title>
                             <div class="flex justify-content-between align-items-center">
-                                {{ data.title }}
+                                {{ data.title || 'Без названия' }}
                                 <div class="flex justify-content-end flex-wrap gap-2">
                                     <Button
                                         label="Подробнее"
@@ -27,6 +33,11 @@
                             </div>
                         </template>
                         <template #subtitle>
+                            <Tag
+                                v-if="data.status === SurveyStatus.IN_DEVELOPMENT"
+                                severity="warning"
+                                :value="`Статус: ${localizeSurveyStatus(data.status)}`"
+                            />
                             <Tag
                                 v-if="data.status === SurveyStatus.NOT_STARTED"
                                 severity="danger"
@@ -74,11 +85,25 @@
                                     @click="router.push(`/survey/${data.id}/statistics`)"
                                 />
                                 <Button
+                                    v-if="data.status === SurveyStatus.IN_DEVELOPMENT"
+                                    label="Опубликовать"
+                                    icon="pi pi-thumbs-up"
+                                    severity="success"
+                                    @click="() => confirmPublishSurvey(data.id)"
+                                />
+                                <Button
                                     v-if="data.status === SurveyStatus.NOT_STARTED"
                                     label="Начать"
                                     icon="pi pi-play"
                                     severity="success"
                                     @click="() => confirmStartSurvey(data.id)"
+                                />
+                                <Button
+                                    v-if="data.status === SurveyStatus.FINISHED"
+                                    label="Повторить"
+                                    icon="pi pi-refresh"
+                                    severity="warning"
+                                    @click="() => confirmResetSurvey(data.id)"
                                 />
                                 <Button
                                     v-if="data.status === SurveyStatus.IN_PROGRESS"
@@ -98,9 +123,9 @@
 
 <script setup lang="ts">
 import { SurveyQuestion, SurveyStatus } from '@prisma/client'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import DataView from 'primevue/dataview'
+import Button from 'primevue/button/Button.vue'
+import Card from 'primevue/card/Card.vue'
+import DataView from 'primevue/dataview/DataView.vue'
 import Divider from 'primevue/divider/Divider.vue'
 import InlineMessage from 'primevue/inlinemessage/InlineMessage.vue'
 import Tag from 'primevue/tag/Tag.vue'
@@ -110,6 +135,50 @@ import { useToast } from 'primevue/usetoast'
 const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
+
+function confirmCreateSurvey() {
+    confirm.require({
+        header: 'Подтверждение действия',
+        message: 'Вы действительно хотите создать новый опрос?',
+        icon: 'pi pi-question-circle',
+        accept: () => {
+            createSurvey()
+        }
+    })
+}
+
+async function createSurvey() {
+    const { error } = await useFetch('/api/telegram/survey/create', { method: 'POST', body: { title: '' } })
+    if (error.value) {
+        toast.add({ summary: 'Ошибка', detail: 'Не удалось создать опрос', severity: 'error', life: 3000 })
+        return
+    }
+
+    await refreshSurveys()
+    toast.add({ summary: 'Успешно', detail: 'Опрос создан', severity: 'success', life: 3000 })
+}
+
+function confirmPublishSurvey(surveyId: string) {
+    confirm.require({
+        header: 'Подтверждение действия',
+        message: 'Вы действительно хотите опубликовать опрос?',
+        icon: 'pi pi-question-circle',
+        accept: () => {
+            publishSurvey(surveyId)
+        }
+    })
+}
+
+async function publishSurvey(surveyId: string) {
+    const { error } = await useFetch('/api/telegram/survey/publish', { query: { surveyId } })
+    if (error.value) {
+        toast.add({ summary: 'Ошибка', detail: 'Не удалось опубликовать опрос', severity: 'error', life: 3000 })
+        return
+    }
+
+    await refreshSurveys()
+    toast.add({ summary: 'Успешно', detail: 'Опрос опубликован', severity: 'success', life: 3000 })
+}
 
 function confirmStartSurvey(surveyId: string) {
     confirm.require({
@@ -153,6 +222,28 @@ async function finishSurvey(surveyId: string) {
 
     await refreshSurveys()
     toast.add({ summary: 'Успешно', detail: 'Опрос завершён', severity: 'success', life: 3000 })
+}
+
+function confirmResetSurvey(surveyId: string) {
+    confirm.require({
+        header: 'Подтверждение действия',
+        message: 'Вы действительно хотите повторить опрос?',
+        icon: 'pi pi-question-circle',
+        accept: () => {
+            resetSurvey(surveyId)
+        }
+    })
+}
+
+async function resetSurvey(surveyId: string) {
+    const { error } = await useFetch('/api/telegram/survey/reset', { query: { surveyId } })
+    if (error.value) {
+        toast.add({ summary: 'Ошибка', detail: 'Не удалось повторить опрос', severity: 'error', life: 3000 })
+        return
+    }
+
+    await refreshSurveys()
+    toast.add({ summary: 'Успешно', detail: 'Опрос обновлён', severity: 'success', life: 3000 })
 }
 
 const { data: surveys, pending: loadingSurveys, refresh: refreshSurveys } = useFetch('/api/telegram/survey/list')
