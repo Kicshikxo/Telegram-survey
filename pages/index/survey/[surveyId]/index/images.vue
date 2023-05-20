@@ -26,7 +26,14 @@
                             {{ data.respondent.secondName }} {{ data.respondent.firstName }} {{ data.respondent.middleName }}
                         </template>
                         <template #content>
-                            Запрос: <span class="text-primary font-bold">{{ data.prompt }}</span>
+                            <div class="flex flex-column gap-3">
+                                <div>
+                                    <span>Запрос: </span><span class="text-primary font-bold">{{ data.prompt }}</span>
+                                </div>
+                                <div class="font-italic">
+                                    <span>В переводе: </span><span>{{ data.translatedPrompt }}</span>
+                                </div>
+                            </div>
                         </template>
                     </Card>
                 </div>
