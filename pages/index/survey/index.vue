@@ -18,7 +18,9 @@
                     <Card class="border-1 surface-border shadow-none">
                         <template #title>
                             <div class="flex justify-content-between align-items-center">
-                                {{ data.title || 'Без названия' }}
+                                <span :class="{ 'text-red-400': !data.title }">
+                                    {{ data.title || 'Без названия' }}
+                                </span>
                                 <div class="flex justify-content-end flex-wrap gap-2">
                                     <Button
                                         label="Подробнее"
@@ -56,7 +58,12 @@
                         </template>
                         <template #content>
                             <div class="flex flex-column gap-2">
-                                <InlineMessage severity="warn" icon="pi pi-info-circle" class="w-full justify-content-start">
+                                <InlineMessage
+                                    v-if="data.shortId"
+                                    severity="warn"
+                                    icon="pi pi-info-circle"
+                                    class="w-full justify-content-start"
+                                >
                                     <span>Короткий идентификатор: </span>
                                     <span class="font-bold">{{ data.shortId }}</span>
                                 </InlineMessage>
