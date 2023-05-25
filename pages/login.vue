@@ -1,7 +1,7 @@
 <template>
     <div class="flex justify-content-center align-items-center h-screen w-screen surface-ground">
         <Card class="surface-card border-1 surface-border border-round shadow-2 w-full sm:w-24rem">
-            <template #title> Войдите в систему </template>
+            <template #title> <div class="pb-2">Войдите в систему</div> </template>
             <template #content>
                 <div class="p-fluid flex flex-column gap-4">
                     <div class="p-inputgroup w-full">
