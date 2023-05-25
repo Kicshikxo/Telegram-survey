@@ -50,8 +50,6 @@ export default defineEventHandler(async event => {
         }
     }))
 
-    console.log(translatedPrompt)
-
     let response = await $fetch<StableDuffisionResponse>('https://stablediffusionapi.com/api/v3/text2img', {
         method: 'POST',
         body: {
@@ -62,8 +60,6 @@ export default defineEventHandler(async event => {
             samples: '1'
         }
     })
-
-    console.log(response)
 
     if (response.status === 'processing') {
         const fetchResultLink = response.fetch_result!
