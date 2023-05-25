@@ -21,10 +21,10 @@
         "vue-slicksort": "^2.0.5"
     },
     "devDependencies": {
-        "@nuxt/devtools": "^0.5.0",
+        "@nuxt/devtools": "^0.5.4",
         "@types/bcrypt": "^5.0.0",
         "@types/jsonwebtoken": "^9.0.2",
-        "nuxt": "^3.5.0",
+        "nuxt": "^3.5.1",
         "prisma": "^4.14.1"
     }
 }
